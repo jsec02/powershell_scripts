@@ -11,10 +11,10 @@ function Sync-DotfileLinks {
     $Output = python "$HOME/parsers/inventory.py" links $Hostname
 
     foreach ($Line in $Output) {
-        # Ignore $Parts[2], the sudo flag is not needed on windows
+        # Ignore $Parts[0], the sudo flag is not needed on windows
         $Parts = $Line -split ' '
-        $Target = $Parts[0]
-        $Path = $Parts[1]
+        $Target = $Parts[1]
+        $Path = $Parts[2]
 
         # Skip if symlink already exists
         if ((Test-Path -Path $Path) -and (Get-Item -Path $Path).LinkType -eq 'SymbolicLink') {
