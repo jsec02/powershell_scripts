@@ -8,7 +8,7 @@ function Sync-DotfileLinks {
         [string]$Hostname
     )
 
-    $Output = python "$HOME/parsers/inventory.py" links $Hostname
+    $Output = python "$HOME\parsers\inventory.py" links $Hostname
 
     foreach ($Line in $Output) {
         # Ignore $Parts[0], the sudo flag is not needed on windows
