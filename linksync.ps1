@@ -24,9 +24,11 @@ function Sync-DotfileLinks {
         # Ensure dotfiles destination dir exists
         New-Item -ItemType Directory -Path (Split-Path $Target -Parent) -Force
 
-        # Move existing config into dotfiles
-        if (Test-Path $Path) {
-            Move-Item -Path $Path -Destination $Target
+        # Fresh-install case where configs may exist already
+        if ((Test-Path $Target) -and (Test-Path $Path)) {
+            Remove-Item -Path $Path # Remove default config
+        } elseif (Test-Path $Path) {
+            Move-Item -Path $Path -Destination $Target # Move existing config into dotfiles
         }
 
         # Ensure target parent dir exists
