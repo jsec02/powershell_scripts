@@ -44,7 +44,7 @@ function Start-Steam  {
 }
 
 function Remove-OverlayFiles {
-    # The existence of the steamservice process means that steam has fully started
+    # The existence of the steamservice process means that steam has completed updating and fully started
     while (-not (Get-Process -Name 'steamservice' -ErrorAction SilentlyContinue)) {
         Start-Sleep -Seconds 1
     }
