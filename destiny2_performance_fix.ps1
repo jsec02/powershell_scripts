@@ -2,6 +2,8 @@
 # =                           DESTINY2_PERFORMANCE_FIX                           =
 # ================================================================================
 
+# https://www.reddit.com/r/DestinyTheGame/comments/1vaen8x/another_possible_steam_performance_fix/
+
 param(
     [String]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
