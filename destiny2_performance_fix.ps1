@@ -8,13 +8,6 @@ param(
     [String]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
-function Assert-SteamInactive {
-    if (Get-Process -Name 'steam' -ErrorAction SilentlyContinue) {
-        Write-Host 'Steam is already running'
-        exit 1
-    }
-}
-
 function Assert-SteamRoot {
     if (-not (Test-Path -Path $SteamRoot)) {
         Write-Host "Cannot find the path: $SteamRoot"
@@ -22,40 +15,46 @@ function Assert-SteamRoot {
     }
 }
 
-function Assert-SteamEXE {
+function Move-OverlayFiles {
     param(
-        [Parameter(Mandatory)]
-        [String]$SteamEXE
-
+        [ValidateSet('Out', 'In')]
+        [string]$Direction
     )
 
-    if (-not (Test-Path -Path $SteamEXE)) {
-        Write-Host "Cannot find the steam executable: $SteamEXE"
-        exit 1
+    $Temp = "$Env:TEMP\Overlay"
+
+    if ($Direction -eq 'Out') {
+        New-Item -Path $Temp -ItemType Directory -Force | Out-Null
+        Move-Item -Path "$SteamRoot\*overlay*" -Destination $Temp -Force
+    } elseif ($Direction -eq 'In') {
+        Move-Item -Path "$Temp\*" -Destination $SteamRoot -Force
     }
 }
 
-function Start-Steam  {
-    $SteamEXE = "$SteamRoot\steam.exe"
-
-    Assert-SteamEXE -SteamEXE $SteamEXE
-
-    Start-Process -FilePath $SteamEXE
-}
-
-function Remove-OverlayFiles {
-    # The existence of the steamservice process means that steam has completed updating and fully started
-    while (-not (Get-Process -Name 'steamservice' -ErrorAction SilentlyContinue)) {
+function Wait-ForDestiny2Process {
+    while (-not $Process) {
+        $Process = Get-Process -Name 'destiny2' -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 1
     }
-    Remove-Item -Path "$SteamRoot\*overlay*"
+
+    return $Process
+}
+
+function Start-Destiny2 {
+    Move-OverlayFiles -Direction Out
+
+    try {
+        Start-Process 'steam://rungameid/1085660' # Destiny 2 Steam App ID
+        $Destiny2Process = Wait-ForDestiny2Process
+        $Destiny2Process.WaitForExit()
+    } finally {
+        Move-OverlayFiles -Direction In
+    }
 }
 
 function Invoke-Main {
-    Assert-SteamInactive
     Assert-SteamRoot
-    Start-Steam
-    Remove-OverlayFiles
+    Start-Destiny2
 }
 
 Invoke-Main
