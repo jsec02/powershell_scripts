@@ -25,7 +25,12 @@ function Move-OverlayFiles {
 
     if ($Direction -eq 'Out') {
         New-Item -Path $Temp -ItemType Directory -Force | Out-Null
-        Move-Item -Path "$SteamRoot\*overlay*" -Destination $Temp -Force
+        # Sometimes steam creates handles to GameOverlayRenderer.dll and GameOverlayRenderer64.dll
+        # which means we cannot move these files. I've opted to supress these errors
+        # I originally wrote an alterate version of this script that sidesteps this problem with different architecture
+        # https://github.com/jsec02/powershell_scripts/blob/bb72237d72235bcd5745c5288fca904c86e0b837/destiny2_performance_fix.ps1
+        # The current version only disables steam overlay for Destiny 2 which is why I decided to keep it despite this handle situation
+        Move-Item -Path "$SteamRoot\*overlay*" -Destination $Temp -Force -ErrorAction SilentlyContinue
     } elseif ($Direction -eq 'In') {
         Move-Item -Path "$Temp\*" -Destination $SteamRoot -Force
     }
