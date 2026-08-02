@@ -8,6 +8,13 @@ param(
     [String]$SteamRoot = 'C:\Program Files (x86)\Steam'
 )
 
+function Assert-SteamInactive {
+    if (Get-Process -Name 'steam' -ErrorAction SilentlyContinue) {
+        Write-Host 'Steam is already running'
+        exit 1
+    }
+}
+
 function Assert-SteamRoot {
     if (-not (Test-Path -Path $SteamRoot)) {
         Write-Host "Cannot find the path: $SteamRoot"
@@ -15,51 +22,40 @@ function Assert-SteamRoot {
     }
 }
 
-function Move-OverlayFiles {
+function Assert-SteamEXE {
     param(
-        [ValidateSet('Out', 'In')]
-        [string]$Direction
+        [Parameter(Mandatory)]
+        [String]$SteamEXE
+
     )
 
-    $Temp = "$Env:TEMP\Overlay"
-
-    if ($Direction -eq 'Out') {
-        New-Item -Path $Temp -ItemType Directory -Force | Out-Null
-        # Sometimes steam creates handles to GameOverlayRenderer.dll and GameOverlayRenderer64.dll
-        # which means we cannot move these files. I've opted to supress these errors
-        # I originally wrote an alterate version of this script that sidesteps this problem with different architecture
-        # https://github.com/jsec02/powershell_scripts/blob/bb72237d72235bcd5745c5288fca904c86e0b837/destiny2_performance_fix.ps1
-        # The current version only disables steam overlay for Destiny 2 which is why I decided to keep it despite this handle situation
-        Move-Item -Path "$SteamRoot\*overlay*" -Destination $Temp -Force -ErrorAction SilentlyContinue
-    } elseif ($Direction -eq 'In') {
-        Move-Item -Path "$Temp\*" -Destination $SteamRoot -Force
+    if (-not (Test-Path -Path $SteamEXE)) {
+        Write-Host "Cannot find the steam executable: $SteamEXE"
+        exit 1
     }
 }
 
-function Wait-ForDestiny2Process {
-    while (-not $Process) {
-        $Process = Get-Process -Name 'destiny2' -ErrorAction SilentlyContinue
+function Start-Steam  {
+    $SteamEXE = "$SteamRoot\steam.exe"
+
+    Assert-SteamEXE -SteamEXE $SteamEXE
+
+    Start-Process -FilePath $SteamEXE
+}
+
+function Remove-OverlayFiles {
+    # The existence of the steamservice process means that steam has completed updating and fully started
+    while (-not (Get-Process -Name 'steamservice' -ErrorAction SilentlyContinue)) {
         Start-Sleep -Seconds 1
     }
-
-    return $Process
-}
-
-function Start-Destiny2 {
-    Move-OverlayFiles -Direction Out
-
-    try {
-        Start-Process 'steam://rungameid/1085660' # Destiny 2 Steam App ID
-        $Destiny2Process = Wait-ForDestiny2Process
-        $Destiny2Process.WaitForExit()
-    } finally {
-        Move-OverlayFiles -Direction In
-    }
+    Remove-Item -Path "$SteamRoot\*overlay*"
 }
 
 function Invoke-Main {
+    Assert-SteamInactive
     Assert-SteamRoot
-    Start-Destiny2
+    Start-Steam
+    Remove-OverlayFiles
 }
 
 Invoke-Main
