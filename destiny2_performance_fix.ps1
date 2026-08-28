@@ -24,7 +24,7 @@ function Assert-SteamRoot {
 
 function Assert-SteamEXE {
     param(
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory=$true)]
         [String]$SteamEXE
 
     )
