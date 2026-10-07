@@ -2,6 +2,8 @@
 # =                           DESTINY2_PERFORMANCE_FIX                           =
 # ================================================================================
 
+Set-StrictMode -Version Latest
+
 # https://www.reddit.com/r/DestinyTheGame/comments/1vaen8x/another_possible_steam_performance_fix/
 
 param(

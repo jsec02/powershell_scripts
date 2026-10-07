@@ -2,6 +2,8 @@
 # =                                   LINKSYNC                                   =
 # ================================================================================
 
+Set-StrictMode -Version Latest
+
 function Sync-DotfileLinks {
     param(
         [Parameter(Mandatory=$true)]
